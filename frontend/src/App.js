@@ -89,9 +89,14 @@ function App() {
           <p className="status-message">Loading tasks...</p>
         ) : error ? (
           <p className="status-message error">{error}</p>
-        ) : filteredTasks.length > 0 ? (
-          <>
-            <TaskList tasks={currentTasks} />
+        ) : (
+          <>    
+            {filteredTasks.length > 0 ? (
+              <TaskList tasks={currentTasks} />
+            ) : (
+
+              <p className="status-message">No tasks found.</p>
+            )}
             <Pagination
               tasksPerPage={tasksPerPage}
               totalTasks={filteredTasks.length}
@@ -99,8 +104,6 @@ function App() {
               currentPage={currentPage}
             />
           </>
-        ) : (
-          <p className="status-message">No tasks found.</p>
         )}
       </main>
     </div>
