@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://react-node-task-manager-roan.vercel.app/'] 
+  origin: ['http://localhost:3000', 'https://react-node-task-manager-roan.vercel.app'] 
 };
 
 app.use(cors(corsOptions));
