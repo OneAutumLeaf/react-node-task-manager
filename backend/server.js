@@ -6,10 +6,10 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://your-frontend-app-name.vercel.app'] 
+  origin: ['http://localhost:3000', 'https://react-node-task-manager-roan.vercel.app/'] 
 };
 
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const EXTERNAL_API_URL = "http://122.163.123.122/CRM/Task/Task.svc/Task_List";
