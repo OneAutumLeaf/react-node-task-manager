@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import TaskFilter from "./components/TaskFilter";
 import TaskList from "./components/TaskList";
+import Pagination from "./components/Pagination";
 import { fetchTasks } from "./api/taskApi";
 import "./App.css";
 
 function App() {
   const [allTasks, setAllTasks] = useState([]);
-  const [displayedTasks, setDisplayedTasks] = useState([]);
-
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [activeFilters, setActiveFilters] = useState({});
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [tasksPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,7 +21,7 @@ function App() {
         setError(null);
         const data = await fetchTasks();
         setAllTasks(data);
-        setDisplayedTasks(data);
+        setFilteredTasks(data);
       } catch (err) {
         setError(
           "Failed to fetch tasks. Please ensure the backend is running."
@@ -34,10 +35,8 @@ function App() {
 
   const handleFilter = (filters) => {
     setActiveFilters(filters);
-
     let filteredData = [...allTasks];
     const exactMatchKeys = ["Task_ID", "Project_ID", "Task_Owned_EmployeeId"];
-
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         filteredData = filteredData.filter((task) => {
@@ -51,12 +50,27 @@ function App() {
         });
       }
     });
-    setDisplayedTasks(filteredData);
+    setFilteredTasks(filteredData);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
     setActiveFilters({});
-    setDisplayedTasks(allTasks);
+    setFilteredTasks(allTasks);
+    setCurrentPage(1);
+  };
+
+  const indexOfLastTask = currentPage * tasksPerPage;
+  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+
+  const paginate = (pageNumber) => {
+    if (
+      pageNumber > 0 &&
+      pageNumber <= Math.ceil(filteredTasks.length / tasksPerPage)
+    ) {
+      setCurrentPage(pageNumber);
+    }
   };
 
   return (
@@ -70,7 +84,24 @@ function App() {
           onReset={handleReset}
           activeFilters={activeFilters}
         />
-        <TaskList tasks={displayedTasks} loading={loading} error={error} />
+
+        {loading ? (
+          <p className="status-message">Loading tasks...</p>
+        ) : error ? (
+          <p className="status-message error">{error}</p>
+        ) : filteredTasks.length > 0 ? (
+          <>
+            <TaskList tasks={currentTasks} />
+            <Pagination
+              tasksPerPage={tasksPerPage}
+              totalTasks={filteredTasks.length}
+              paginate={paginate}
+              currentPage={currentPage}
+            />
+          </>
+        ) : (
+          <p className="status-message">No tasks found.</p>
+        )}
       </main>
     </div>
   );
