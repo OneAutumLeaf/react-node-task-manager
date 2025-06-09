@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import TaskFilter from "./components/TaskFilter";
 import TaskList from "./components/TaskList";
 import Pagination from "./components/Pagination";
@@ -7,7 +7,6 @@ import "./App.css";
 
 function App() {
   const [allTasks, setAllTasks] = useState([]);
-  const [filteredTasks, setFilteredTasks] = useState([]);
   const [activeFilters, setActiveFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [tasksPerPage] = useState(20);
@@ -16,13 +15,18 @@ function App() {
 
   useEffect(() => {
     const loadAllTasks = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        setLoading(true);
-        setError(null);
         const data = await fetchTasks();
-        setAllTasks(data);
-        setFilteredTasks(data);
+        if (Array.isArray(data)) {
+          setAllTasks(data);
+        } else {
+          console.error("API did not return an array.");
+          setAllTasks([]);
+        }
       } catch (err) {
+        console.error("Error during fetch:", err);
         setError(
           "Failed to fetch tasks. Please ensure the backend is running."
         );
@@ -33,45 +37,57 @@ function App() {
     loadAllTasks();
   }, []);
 
-  const handleFilter = (filters) => {
+  const handleFilter = useCallback((filters) => {
     setActiveFilters(filters);
-    let filteredData = [...allTasks];
-    const exactMatchKeys = ["Task_ID", "Project_ID", "Task_Owned_EmployeeId"];
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        filteredData = filteredData.filter((task) => {
-          const taskValue = task[key];
-          if (exactMatchKeys.includes(key)) {
-            return taskValue === value;
-          } else {
-            const stringTaskValue = taskValue ? String(taskValue) : "";
-            return stringTaskValue.toLowerCase().includes(value.toLowerCase());
-          }
-        });
-      }
-    });
-    setFilteredTasks(filteredData);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setActiveFilters({});
-    setFilteredTasks(allTasks);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const indexOfLastTask = currentPage * tasksPerPage;
-  const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-  const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
-
-  const paginate = (pageNumber) => {
-    if (
-      pageNumber > 0 &&
-      pageNumber <= Math.ceil(filteredTasks.length / tasksPerPage)
-    ) {
-      setCurrentPage(pageNumber);
+  const filteredTasks = useMemo(() => {
+    if (Object.keys(activeFilters).length === 0) {
+      return allTasks;
     }
-  };
+
+    return allTasks.filter((task) => {
+      return Object.entries(activeFilters).every(([key, value]) => {
+        if (!value) return true;
+
+        const taskValue = task[key];
+        const exactMatchKeys = [
+          "Task_ID",
+          "Project_ID",
+          "Task_Owned_EmployeeId",
+        ];
+
+        if (exactMatchKeys.includes(key)) {
+          return taskValue === value;
+        } else {
+          const stringTaskValue = taskValue ? String(taskValue) : "";
+          return stringTaskValue.toLowerCase().includes(value.toLowerCase());
+        }
+      });
+    });
+  }, [allTasks, activeFilters]);
+
+  const currentTasks = useMemo(() => {
+    const indexOfLastTask = currentPage * tasksPerPage;
+    const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+    return filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+  }, [currentPage, tasksPerPage, filteredTasks]);
+
+  const paginate = useCallback(
+    (pageNumber) => {
+      const totalPages = Math.ceil(filteredTasks.length / tasksPerPage);
+      if (pageNumber > 0 && pageNumber <= totalPages) {
+        setCurrentPage(pageNumber);
+      }
+    },
+    [filteredTasks.length, tasksPerPage]
+  );
 
   return (
     <div className="App">
@@ -90,11 +106,10 @@ function App() {
         ) : error ? (
           <p className="status-message error">{error}</p>
         ) : (
-          <>    
+          <>
             {filteredTasks.length > 0 ? (
               <TaskList tasks={currentTasks} />
             ) : (
-
               <p className="status-message">No tasks found.</p>
             )}
             <Pagination

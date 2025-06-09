@@ -1,6 +1,8 @@
 import React from "react";
 
 const TaskList = ({ tasks }) => {
+
+  console.log("TaskList is re-rendering...");
   return (
     <div className="task-list-container">
       <table>
@@ -33,4 +35,4 @@ const TaskList = ({ tasks }) => {
   );
 };
 
-export default TaskList;
+export default React.memo(TaskList);

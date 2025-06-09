@@ -82,4 +82,4 @@ const TaskFilter = ({ onFilter, onReset, activeFilters }) => {
   );
 };
 
-export default TaskFilter;
+export default React.memo(TaskFilter);
