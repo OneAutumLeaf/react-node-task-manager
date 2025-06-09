@@ -12,9 +12,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-
-
 app.get("/api/tasks", async (req, res) => {
   try {
     const EXTERNAL_API_URL = 'http://122.163.123.122/CRM/Task/Task.svc/Task_List';
@@ -30,6 +27,6 @@ app.get("/api/tasks", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Backend server is running and listening on http://localhost:${PORT}`);
+  console.log(`Backend server is running and listening on http://localhost:${PORT}`);
   console.log('Ready to accept requests from the frontend.');
 });
