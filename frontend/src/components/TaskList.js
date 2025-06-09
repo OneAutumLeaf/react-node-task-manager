@@ -1,18 +1,6 @@
 import React from "react";
 
-const TaskList = ({ tasks, loading, error }) => {
-  if (loading) {
-    return <p className="status-message">Loading tasks...</p>;
-  }
-
-  if (error) {
-    return <p className="status-message error">Error: {error}</p>;
-  }
-
-  if (!tasks || tasks.length === 0) {
-    return <p className="status-message">No tasks found.</p>;
-  }
-
+const TaskList = ({ tasks }) => {
   return (
     <div className="task-list-container">
       <table>

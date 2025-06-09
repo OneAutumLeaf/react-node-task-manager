@@ -1,5 +1,3 @@
-// frontend/src/api/taskApi.js
-
 import axios from "axios";
 
 const API_BASE_URL = "https://my-task-manager-api.onrender.com";
